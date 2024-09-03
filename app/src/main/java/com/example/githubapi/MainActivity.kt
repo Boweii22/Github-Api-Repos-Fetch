@@ -1,5 +1,6 @@
 package com.example.githubapi
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -7,6 +8,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -19,6 +22,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 class MainActivity : AppCompatActivity() {
 
     private lateinit var githubApiService: GitHubApiService
+    private lateinit var reposRecyclerView: RecyclerView
+    private lateinit var repositoryAdapter: RepositoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +34,10 @@ class MainActivity : AppCompatActivity() {
         val profileImageView: ImageView = findViewById(R.id.profileImageView)
         val nameTextView: TextView = findViewById(R.id.nameTextView)
         val bioTextView: TextView = findViewById(R.id.bioTextView)
-        val reposTextView: TextView = findViewById(R.id.reposTextView)
+        reposRecyclerView = findViewById(R.id.reposRecyclerView)
+
+        // Set up RecyclerView
+        reposRecyclerView.layoutManager = LinearLayoutManager(this)
 
         // Set up Retrofit
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -101,11 +109,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayUserRepos(repos: List<GitHubRepo>) {
-        val reposTextView: TextView = findViewById(R.id.reposTextView)
-        val reposText = StringBuilder()
-        for (repo in repos) {
-            reposText.append("${repo.name}: ${repo.html_url}\n\n")
+        repositoryAdapter = RepositoryAdapter(repos) { repo ->
+            val intent = Intent(this, RepositoryContentActivity::class.java)
+            intent.putExtra("REPO_NAME", repo.name)
+            intent.putExtra("REPO_OWNER", repo.owner.login)
+            startActivity(intent)
         }
-        reposTextView.text = reposText.toString()
+        reposRecyclerView.adapter = repositoryAdapter
     }
 }
